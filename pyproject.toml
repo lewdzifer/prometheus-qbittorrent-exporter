@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "prometheus-qbittorrent-exporter"
+name = "qbittorrent-exporter"
 version = "1.5.2"
 description = "Prometheus exporter for qbittorrent"
 authors = [
