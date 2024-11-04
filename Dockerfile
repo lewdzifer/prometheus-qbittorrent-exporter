@@ -3,7 +3,7 @@ FROM python:$PYTHON_BASE AS builder
 
 RUN pip install -U pdm
 ENV PDM_CHECK_UPDATE=false
-COPY pyproject.toml pdm.lock README.md /project/
+COPY pyproject.toml.bak pdm.lock README.md /project/
 COPY qbittorrent_exporter/ /project/qbittorrent_exporter
 
 WORKDIR /project

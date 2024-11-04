@@ -90,15 +90,12 @@ class QbittorrentMetricsCollector:
         return metrics
 
     def _get_qbittorrent_by_torrent_metrics(self) -> list[Metric]:
-        if not self.config.get("export_metrics_by_torrent", False):
-            return []
-
         torrents = self._fetch_torrents()
 
         metrics: list[Metric] = []
 
         for torrent in torrents:
-            metrics.append(
+            metrics.extend([
                 Metric(
                     name=f"{self.config['metrics_prefix']}_torrent_size",
                     value=torrent["size"],
@@ -108,20 +105,88 @@ class QbittorrentMetricsCollector:
                         "server": self.server,
                     },
                     help_text="Size of the torrent",
-                )
-            )
-            metrics.append(
+                ),
                 Metric(
-                    name=f"{self.config['metrics_prefix']}_torrent_downloaded",
+                    name=f"{self.config['metrics_prefix']}_torrent_dl",
                     value=torrent["downloaded"],
                     labels={
                         "name": torrent["name"],
                         "category": torrent["category"],
                         "server": self.server,
                     },
-                    help_text="Downloaded data for the torrent",
-                )
-            )
+                    help_text="Amount of data downloaded",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_dl_session",
+                    value=torrent["completed"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Amount of data downloaded this session",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_ul",
+                    value=torrent["uploaded"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Amount of data uploaded",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_ul_session",
+                    value=torrent["uploaded_session"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Amount of data uploaded this session",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_seeds",
+                    value=torrent["num_seeds"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Number of seeds connected to",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_seeds_total",
+                    value=torrent["num_complete"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Number of seeds in the swarm",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_leechs",
+                    value=torrent["num_leechs"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Number of leechers connected to",
+                ),
+                Metric(
+                    name=f"{self.config['metrics_prefix']}_torrent_leechs_total",
+                    value=torrent["num_incomplete"],
+                    labels={
+                        "name": torrent["name"],
+                        "category": torrent["category"],
+                        "server": self.server,
+                    },
+                    help_text="Number of leechers in the swarm",
+                ),
+            ])
 
         return metrics
 
@@ -176,28 +241,28 @@ class QbittorrentMetricsCollector:
                 help_text="Number of DHT nodes connected to.",
             ),
             Metric(
-                name=f"{self.config['metrics_prefix']}_dl_info_data",
+                name=f"{self.config['metrics_prefix']}_dl_session",
                 value=server_state.get("dl_info_data", 0),
                 labels={"server": self.server},
                 help_text="Data downloaded since the server started, in bytes.",
                 metric_type=MetricType.COUNTER,
             ),
             Metric(
-                name=f"{self.config['metrics_prefix']}_up_info_data",
+                name=f"{self.config['metrics_prefix']}_ul_session",
                 value=server_state.get("up_info_data", 0),
                 labels={"server": self.server},
                 help_text="Data uploaded since the server started, in bytes.",
                 metric_type=MetricType.COUNTER,
             ),
             Metric(
-                name=f"{self.config['metrics_prefix']}_alltime_dl",
+                name=f"{self.config['metrics_prefix']}_dl",
                 value=server_state.get("alltime_dl", 0),
                 labels={"server": self.server},
                 help_text="Total historical data downloaded, in bytes.",
                 metric_type=MetricType.COUNTER,
             ),
             Metric(
-                name=f"{self.config['metrics_prefix']}_alltime_ul",
+                name=f"{self.config['metrics_prefix']}_ul",
                 value=server_state.get("alltime_ul", 0),
                 labels={"server": self.server},
                 help_text="Total historical data uploaded, in bytes.",
@@ -225,18 +290,18 @@ class QbittorrentMetricsCollector:
             return []
 
     def _filter_torrents_by_category(
-        self, category: str, torrents: list[dict]
+            self, category: str, torrents: list[dict]
     ) -> list[dict]:
         """Filters torrents by the given category."""
         return [
             torrent
             for torrent in torrents
             if torrent["category"] == category
-            or (category == "Uncategorized" and torrent["category"] == "")
+               or (category == "Uncategorized" and torrent["category"] == "")
         ]
 
     def _filter_torrents_by_state(
-        self, state: TorrentStates, torrents: list[dict]
+            self, state: TorrentStates, torrents: list[dict]
     ) -> list[dict]:
         """Filters torrents by the given state."""
         return [torrent for torrent in torrents if torrent["state"] == state.value]
@@ -320,11 +385,8 @@ def get_config() -> dict:
         "exporter_port": int(_get_config_value("EXPORTER_PORT", "8000")),
         "log_level": _get_config_value("EXPORTER_LOG_LEVEL", "INFO"),
         "metrics_prefix": _get_config_value("METRICS_PREFIX", "qbittorrent"),
-        "export_metrics_by_torrent": (
-            _get_config_value("EXPORT_METRICS_BY_TORRENT", "False") == "True"
-        ),
         "verify_webui_certificate": (
-            _get_config_value("VERIFY_WEBUI_CERTIFICATE", "True") == "True"
+                _get_config_value("VERIFY_WEBUI_CERTIFICATE", "True") == "True"
         ),
     }
 

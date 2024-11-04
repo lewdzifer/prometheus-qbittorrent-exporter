@@ -1,37 +1,30 @@
-[project]
+[tool.poetry]
 name = "prometheus-qbittorrent-exporter"
-version = "1.5.1"
+version = "1.5.2"
 description = "Prometheus exporter for qbittorrent"
 authors = [
-    {name = "Esteban Sanchez", email = "esteban.sanchez@gmail.com"},
+    "Esteban Sanchez <esteban.sanchez@gmail.com>",
+    "Lewdzifer <lewdzifer@pidx.io>"
 ]
-dependencies = [
-    "prometheus-client>=0.20.0",
-    "python-json-logger>=2.0.7",
-    "qbittorrent-api>=2024.5.62",
-]
-requires-python = ">=3.11"
+license = "GPL-3.0"
 readme = "README.md"
-keywords = ["prometheus", "qbittorrent"]
-license = {text = "GPL-3.0"}
-classifiers = []
 
-[project.urls]
-Homepage = "https://github.com/esanchezm/prometheus-qbittorrent-exporter"
-Downloads = "https://github.com/esanchezm/prometheus-qbittorrent-exporter/archive/1.5.1.tar.gz"
-
-[project.scripts]
+[tool.poetry.scripts]
 qbittorrent-exporter = "qbittorrent_exporter.exporter:main"
 
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+[tool.poetry.dependencies]
+python = ">=3.11"
+prometheus-client = "^0.21.0"
+python-json-logger = "^2.0.7"
+qbittorrent-api = "^2024.10.68"
 
-[tool.pdm.dev-dependencies]
-dev = [
-    "pytest>=8.2.1",
-    "isort>=5.13.2",
-    "black>=24.4.2",
-    "coverage>=7.5.3",
-    "ruff>=0.6.2",
-]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+isort = "^5.13.2"
+black = "^24.10.0"
+coverage = "^7.6.4"
+ruff = "^0.7.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
